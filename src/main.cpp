@@ -8,7 +8,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 
-#define DEVICE_NAME "ESP32"         // デバイス名
+#define DEVICE_NAME "M5AtomS3SecurityNode" // デバイス名
 
 const char *storage = "/data/settings.txt";
 
