@@ -63,7 +63,10 @@ static const char run = 0;
 static const char reverse_setting = 1;
 static const char node_no_10 = 2;
 static const char node_no_1 = 3;
+static const char confirm_save = 4;
 static char config_state = run;
+bool confirm_save_flag = false;
+
 static const bool FORMAT_SPIFFS_IF_FAILED = true;
 
 void setup() {
@@ -81,7 +84,7 @@ void setup() {
     device_no = fp.read();
     reverse = fp.read() > 0 ? true : false;
     fp.close();
-    Serial.println("SPIFFS FILE READ");
+    USBSerial.println("SPIFFS FILE READ");
     if (device_no == 0) {
       device_no = 1;
     }
@@ -92,7 +95,7 @@ void setup() {
 
 // 液晶画面変更処理関数
 void lcdChange()  {
-  char digit[3];
+  char digit[4];
   switch (config_state) {
     case run:
     case reverse_setting:
@@ -142,6 +145,21 @@ void lcdChange()  {
       sprintf(digit, "%02d", device_no);                     // ConfigState表示
       M5.Lcd.print(digit);                                   // ConfigState表示
       break;
+    case confirm_save:
+      M5.Lcd.fillRect(0, 0, 128, 128, M5.Lcd.color565(0, 128, 128));   // 塗り潰し（黄）
+      M5.Lcd.setTextSize(2);
+      M5.Lcd.setTextColor(M5.Lcd.color565(0 , 0, 0));        // 文字色指定
+      M5.Lcd.setCursor(0, 0);                                // 表示開始位置左上角（X,Y）
+      M5.Lcd.print("CONFIRM\nSAVE");                          // ConfigState表示
+      M5.Lcd.setTextSize(5);
+      if (confirm_save_flag) {
+        M5.Lcd.setCursor(22, 48);                            // 表示開始位置左上角（X,Y）
+      } else {
+        M5.Lcd.setCursor(38, 48);                            // 表示開始位置左上角（X,Y）
+      }
+      sprintf(digit, "%s", confirm_save_flag ? "YES" : "NO");// ConfigState表示
+      M5.Lcd.print(digit);                                   // ConfigState表示
+      break;
   }
 }
 
@@ -149,21 +167,33 @@ void changeConfigState() {
   switch (config_state) {
     case run:
       config_state = reverse_setting;
+      USBSerial.println("Enter to Config mode.");
+      USBSerial.println("Reverse Setting.");
       break;
     case reverse_setting:
       config_state = node_no_10;
+      USBSerial.println("Node No first order.");
       break;
     case node_no_10:
       config_state = node_no_1;
+      USBSerial.println("Node No second order.");
       break;
     case node_no_1:
+      config_state = confirm_save;
+      USBSerial.println("Confirm save.");
+      break;
+    case confirm_save:
       config_state = run;
-      // 設定書き込み
-      File fp = SPIFFS.open(storage, FILE_WRITE);
-      fp.write((uint8_t)device_no);
-      fp.write((uint8_t)(reverse ? 1 : 0));
-      fp.close();
-      Serial.println("SPIFFS FILE WRITE");
+      if (confirm_save_flag) {
+        // 設定書き込み
+        File fp = SPIFFS.open(storage, FILE_WRITE);
+        fp.write((uint8_t)device_no);
+        fp.write((uint8_t)(reverse ? 1 : 0));
+        fp.close();
+        USBSerial.println("SPIFFS FILE WRITE");
+        confirm_save_flag = false;
+      }
+      USBSerial.println("Exit from Config mode.");
       break;
   }
 }
@@ -200,6 +230,14 @@ void loop() {
         }
         USBSerial.print("Device NO: ");
         USBSerial.println(device_no);
+        lcdChange();                  // 液晶画面表示変更
+        break;
+      case confirm_save:
+        USBSerial.print("SAVE? ");
+        USBSerial.print(confirm_save_flag);
+        confirm_save_flag = !confirm_save_flag;           // ON/OFF状態反転
+        USBSerial.print(" to ");
+        USBSerial.println(confirm_save_flag);
         lcdChange();                  // 液晶画面表示変更
         break;
     }
