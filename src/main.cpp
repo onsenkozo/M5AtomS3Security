@@ -58,7 +58,10 @@ bool reverse = false;         // 条件反転フラグ
 bool state = false;           // 本体ボタン状態格納用
 bool initializeState = false; // ボタン初期表示完了フラグ
 
-static uint8_t device_no = 1;    // デバイス識別番号（1～99）
+static uint8_t device_no = 1; // デバイス識別番号（1～99）
+bool old_reverse = false;     // 変更前条件反転フラグ
+uint8_t old_device_no = 1;    // 変更前デバイス識別番号（1～99）
+
 static const char run = 0;
 static const char reverse_setting = 1;
 static const char node_no_10 = 2;
@@ -167,11 +170,13 @@ void changeConfigState() {
   switch (config_state) {
     case run:
       config_state = reverse_setting;
+      old_reverse = reverse;
       USBSerial.println("Enter to Config mode.");
       USBSerial.println("Reverse Setting.");
       break;
     case reverse_setting:
       config_state = node_no_10;
+      old_device_no = device_no;
       USBSerial.println("Node No first order.");
       break;
     case node_no_10:
@@ -192,6 +197,10 @@ void changeConfigState() {
         fp.close();
         USBSerial.println("SPIFFS FILE WRITE");
         confirm_save_flag = false;
+      } else {
+        device_no = old_device_no;
+        reverse = old_reverse;
+        USBSerial.println("Discard changes.");
       }
       USBSerial.println("Exit from Config mode.");
       break;
