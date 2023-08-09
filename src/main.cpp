@@ -76,11 +76,12 @@ void setup() {
         return;
     }
 
+    // 設定読み込み
     File fp = SPIFFS.open(storage, FILE_READ);
-    // 書き込み
-    fp.readBytes((char*)&device_no, 1);
+    device_no = fp.read();
+    reverse = fp.read() > 0 ? true : false;
     fp.close();
-    Serial.println("SPIFFS FILE WRITE");
+    Serial.println("SPIFFS FILE READ");
     if (device_no == 0) {
       device_no = 1;
     }
@@ -157,9 +158,10 @@ void changeConfigState() {
       break;
     case node_no_1:
       config_state = run;
+      // 設定書き込み
       File fp = SPIFFS.open(storage, FILE_WRITE);
-      // 書き込み
-      fp.write(&device_no, 1);
+      fp.write((uint8_t)device_no);
+      fp.write((uint8_t)(reverse ? 1 : 0));
       fp.close();
       Serial.println("SPIFFS FILE WRITE");
       break;
