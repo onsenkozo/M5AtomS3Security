@@ -8,7 +8,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 
-#define DEVICE_NAME "M5AtomS3SecurityNode" // デバイス名
+#define DEVICE_NAME "M5Sense" // デバイス名
 
 const char *storage = "/data/settings.txt";
 
@@ -32,11 +32,12 @@ void setAdvertisementData(BLEAdvertising* pAdvertising, uint8_t& device_no, bool
   oAdvertisementData.setFlags(0x06);      // LE General Discoverable Mode | BR_EDR_NOT_SUPPORTED
   oAdvertisementData.addData(strData);
   pAdvertising->setAdvertisementData(oAdvertisementData);
+  pAdvertising->setAdvertisementType(esp_ble_adv_type_t::ADV_TYPE_NONCONN_IND);
 }
 
 void setupBLE(uint8_t& device_no, bool& state) {
   USBSerial.println("Starting BLE");
-  BLEDevice::init("my-peripheral");
+  BLEDevice::init(DEVICE_NAME);
   server = BLEDevice::createServer();
   advertising = server->getAdvertising();
   th = std::make_shared<std::thread>([&]() {
