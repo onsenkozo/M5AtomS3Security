@@ -44,7 +44,7 @@ void setAdvertisementData(BLEAdvertising* pAdvertising, uint8_t& device_no, bool
   strData += (char)0xff;                  // Manufacturer specific data
   strData += (char)0xff;                  // manufacturer ID low byte
   strData += (char)0xff;                  // manufacturer ID high byte
-  strData += (char)device_no;             // サーバー識別番号
+  strData += (char)device_no;             // デバイス番号
   strData += (char)state ? 1 : 0;         // lock state
   strData = (char)strData.length() + strData; // 先頭にLengthを設定
 
